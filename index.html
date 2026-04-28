@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Legendary Motorsports — Quote Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,900;1,700;1,900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #e8130a;
+      --red-dark: #a50d07;
+      --red-border: rgba(232,19,10,0.35);
+      --red-dim: rgba(232,19,10,0.08);
+      --gold: #f0a500;
+      --white: #f0ede6;
+      --muted: #7a7570;
+      --bg: #060606;
+      --surface: #0e0e0e;
+      --surface2: #141414;
+      --surface3: #1c1c1c;
+      --mono: 'Share Tech Mono', monospace;
+      --display: 'Barlow Condensed', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--display);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: repeating-linear-gradient(110deg, transparent, transparent 60px, rgba(255,255,255,0.008) 60px, rgba(255,255,255,0.008) 61px);
+      pointer-events: none; z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+      pointer-events: none; z-index: 9998;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 40px; height: 64px;
+      background: rgba(6,6,6,0.96); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--red-border);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 14px; }
+
+    .header-emblem {
+      width: 36px; height: 36px;
+      border: 1px solid var(--red-border);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .header-emblem::before { content: ''; position: absolute; inset: 3px; border: 1px solid rgba(232,19,10,0.15); }
+
+    .emblem-inner {
+      width: 10px; height: 10px;
+      background: var(--red);
+      clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    }
+
+    .header-title { font-weight: 900; font-size: 19px; letter-spacing: 5px; text-transform: uppercase; }
+    .header-title span { color: var(--red); }
+    .header-sub { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+
+    .quote-id {
+      font-family: var(--mono);
+      font-size: 13px; color: var(--gold); letter-spacing: 2px;
+    }
+
+    .btn-back {
+      font-family: var(--display); font-weight: 700;
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+      background: none; border: 1px solid var(--surface3);
+      color: var(--muted); padding: 8px 16px; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--red-border); color: var(--red); }
+
+    /* ── Layout ── */
+    .app {
+      position: relative; z-index: 10;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2px;
+      min-height: calc(100vh - 64px);
+    }
+
+    /* ── Left: builder ── */
+    .builder { display: flex; flex-direction: column; gap: 2px; }
+
+    /* Client info */
+    .section-block {
+      background: var(--surface);
+      padding: 36px 44px;
+      border-top: 1px solid var(--surface3);
+    }
+    .section-block:first-child { border-top: none; }
+
+    .section-eyebrow {
+      font-size: 10px; letter-spacing: 6px; text-transform: uppercase;
+      color: var(--red); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--red); }
+
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .form-grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.span2 { grid-column: span 2; }
+    .form-group.span3 { grid-column: span 3; }
+    .form-group.span4 { grid-column: span 4; }
+
+    .form-label { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--muted); }
+
+    .form-input, .form-select, .form-textarea {
+      background: var(--surface2); border: 1px solid var(--surface3);
+      color: var(--white); font-family: var(--mono); font-size: 13px;
+      padding: 10px 14px; outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--red-border); }
+    .form-select { cursor: pointer; }
+    .form-select option { background: var(--surface2); }
+    .form-textarea { resize: vertical; min-height: 70px; font-family: var(--display); font-size: 14px; }
+
+    /* Line items table */
+    .line-items-header {
+      display: grid;
+      grid-template-columns: 120px 1fr 80px 100px 100px 36px;
+      gap: 8px; padding: 0 0 10px 0;
+      border-bottom: 1px solid var(--surface3);
+      margin-bottom: 8px;
+    }
+    .line-items-header span {
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+    }
+
+    .line-item {
+      display: grid;
+      grid-template-columns: 120px 1fr 80px 100px 100px 36px;
+      gap: 8px; align-items: center; margin-bottom: 6px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .line-input {
+      background: var(--surface2); border: 1px solid var(--surface3);
+      color: var(--white); font-family: var(--mono); font-size: 13px;
+      padding: 8px 10px; outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .line-input:focus { border-color: var(--red-border); }
+    .line-input.right { text-align: right; }
+
+    .line-select {
+      background: var(--surface2); border: 1px solid var(--surface3);
+      color: var(--white); font-family: var(--display); font-weight: 700;
+      font-size: 12px; letter-spacing: 1px; padding: 8px 10px;
+      outline: none; cursor: pointer; width: 100%;
+    }
+    .line-select option { background: var(--surface2); }
+
+    .line-total {
+      font-family: var(--mono); font-size: 13px;
+      color: var(--gold); text-align: right; padding-right: 4px;
+    }
+
+    .btn-delete-line {
+      background: none; border: 1px solid var(--surface3);
+      color: var(--muted); cursor: pointer; font-size: 14px;
+      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-family: var(--mono);
+    }
+    .btn-delete-line:hover { border-color: var(--red-border); color: var(--red); }
+
+    .add-line-row {
+      display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;
+    }
+
+    .btn-add-line {
+      font-family: var(--display); font-weight: 700;
+      font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      background: var(--surface2); border: 1px solid var(--surface3);
+      color: var(--muted); padding: 8px 20px; cursor: pointer; transition: all 0.2s;
+      clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+    }
+    .btn-add-line:hover { border-color: var(--red-border); color: var(--white); }
+    .btn-add-line.primary { background: var(--red); color: var(--white); border-color: var(--red); }
+    .btn-add-line.primary:hover { background: #ff1f15; }
+
+    /* ── Right: summary ── */
+    .summary {
+      background: var(--surface);
+      border-left: 1px solid var(--surface3);
+      display: flex; flex-direction: column;
+      position: sticky; top: 64px;
+      height: calc(100vh - 64px);
+      overflow-y: auto;
+    }
+
+    .summary::-webkit-scrollbar { width: 3px; }
+    .summary::-webkit-scrollbar-thumb { background: var(--surface3); }
+
+    .summary-header {
+      padding: 28px 28px 20px;
+      border-bottom: 1px solid var(--surface3);
+    }
+
+    .summary-title {
+      font-weight: 900; font-style: italic;
+      font-size: 26px; letter-spacing: 2px; text-transform: uppercase;
+    }
+
+    .summary-subtitle {
+      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--muted); margin-top: 4px;
+    }
+
+    .summary-client {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--surface3);
+      background: var(--surface2);
+    }
+
+    .summary-client-name {
+      font-weight: 900; font-size: 20px; letter-spacing: 1px; text-transform: uppercase;
+    }
+
+    .summary-client-detail {
+      font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--muted); margin-top: 4px;
+    }
+
+    .summary-vehicle {
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--surface3);
+    }
+
+    .summary-vehicle-label {
+      font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--red); margin-bottom: 6px;
+    }
+
+    .summary-vehicle-text {
+      font-family: var(--mono); font-size: 14px; color: var(--white);
+    }
+
+    /* Line breakdown */
+    .summary-lines { padding: 16px 28px; flex: 1; }
+
+    .summary-section-label {
+      font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+      color: var(--muted); margin: 12px 0 8px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--surface3);
+    }
+
+    .summary-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .summary-line-name {
+      font-size: 13px; color: var(--white); max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .summary-line-cat {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    }
+
+    .summary-line-amount {
+      font-family: var(--mono); font-size: 13px; color: var(--gold); white-space: nowrap;
+    }
+
+    /* Totals */
+    .summary-totals {
+      padding: 20px 28px;
+      border-top: 1px solid var(--surface3);
+      background: var(--surface2);
+    }
+
+    .totals-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 6px 0;
+    }
+
+    .totals-label {
+      font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
+    }
+
+    .totals-value {
+      font-family: var(--mono); font-size: 14px; color: var(--white);
+    }
+
+    .totals-divider { height: 1px; background: var(--surface3); margin: 10px 0; }
+
+    .totals-grand {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 12px 0 0;
+    }
+
+    .totals-grand-label {
+      font-weight: 900; font-style: italic; font-size: 22px;
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+
+    .totals-grand-value {
+      font-family: var(--mono); font-size: 28px; color: var(--white);
+    }
+
+    /* Tax toggle */
+    .tax-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    .tax-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+    .tax-input-wrap { display: flex; align-items: center; gap: 8px; }
+
+    .tax-input {
+      background: var(--surface); border: 1px solid var(--surface3);
+      color: var(--gold); font-family: var(--mono); font-size: 13px;
+      width: 52px; padding: 4px 8px; text-align: right; outline: none;
+    }
+    .tax-input:focus { border-color: var(--red-border); }
+
+    .tax-pct { font-size: 12px; color: var(--muted); }
+
+    /* Notes */
+    .summary-notes {
+      padding: 16px 28px;
+      border-top: 1px solid var(--surface3);
+    }
+
+    .notes-text {
+      font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.6;
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    /* Actions */
+    .summary-actions {
+      padding: 20px 28px;
+      border-top: 1px solid var(--surface3);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .btn-action {
+      font-family: var(--display); font-weight: 700;
+      font-size: 13px; letter-spacing: 3px; text-transform: uppercase;
+      padding: 13px 24px; border: none; cursor: pointer; transition: all 0.2s;
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+      text-align: center;
+    }
+
+    .btn-action-primary { background: var(--red); color: var(--white); }
+    .btn-action-primary:hover { background: #ff1f15; }
+    .btn-action-ghost {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--surface3); clip-path: none;
+    }
+    .btn-action-ghost:hover { border-color: var(--muted); color: var(--white); }
+
+    /* Empty state */
+    .empty-lines {
+      padding: 32px 0; text-align: center;
+      font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--surface3);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--surface2); border: 1px solid var(--red-border);
+      border-left: 3px solid var(--red);
+      padding: 12px 24px; font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      color: var(--white); z-index: 9990; opacity: 0;
+      transition: all 0.3s ease; white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* Discount row */
+    .discount-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+    .discount-input {
+      background: var(--surface); border: 1px solid var(--surface3);
+      color: var(--gold); font-family: var(--mono); font-size: 13px;
+      width: 80px; padding: 4px 8px; text-align: right; outline: none;
+    }
+    .discount-input:focus { border-color: var(--red-border); }
+
+    /* Saved quotes list */
+    .saved-block { background: var(--surface); padding: 28px 44px; border-top: 1px solid var(--surface3); }
+    .saved-list { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
+    .saved-item {
+      display: grid; grid-template-columns: 1fr auto auto;
+      align-items: center; gap: 12px;
+      padding: 10px 14px; background: var(--surface2); border: 1px solid var(--surface3);
+      cursor: pointer; transition: border-color 0.2s;
+    }
+    .saved-item:hover { border-color: var(--red-border); }
+    .saved-item-name { font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+    .saved-item-meta { font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+    .saved-item-total { font-family: var(--mono); font-size: 14px; color: var(--gold); }
+    .saved-item-del {
+      background: none; border: none; color: var(--surface3);
+      cursor: pointer; font-family: var(--mono); font-size: 13px;
+      transition: color 0.2s;
+    }
+    .saved-item-del:hover { color: var(--red); }
+    .saved-empty { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--surface3); padding: 16px 0; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-emblem"><div class="emblem-inner"></div></div>
+    <div>
+      <div class="header-title">Legendary <span>Moto</span></div>
+      <div class="header-sub">Quote Builder</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="quote-id" id="quote-id-display">QT-000001</div>
+  
+  </div>
+</header>
+
+<div class="app">
+  <!-- LEFT: Builder -->
+  <div class="builder">
+
+    <!-- Client Info -->
+    <div class="section-block">
+      <div class="section-eyebrow">Client Information</div>
+      <div class="form-grid-4">
+        <div class="form-group span2">
+          <label class="form-label">Client Name</label>
+          <input class="form-input" id="client-name" type="text" placeholder="Full name" oninput="updateSummary()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-input" id="client-phone" type="text" placeholder="(555) 000-0000" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="client-email" type="text" placeholder="email@domain.com" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Vehicle Info -->
+    <div class="section-block">
+      <div class="section-eyebrow">Vehicle Details</div>
+      <div class="form-grid-4">
+        <div class="form-group">
+          <label class="form-label">Year</label>
+          <input class="form-input" id="veh-year" type="text" placeholder="2024" oninput="updateSummary()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Make</label>
+          <input class="form-input" id="veh-make" type="text" placeholder="Porsche" oninput="updateSummary()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Model</label>
+          <input class="form-input" id="veh-model" type="text" placeholder="911 GT3" oninput="updateSummary()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">VIN / Stock #</label>
+          <input class="form-input" id="veh-vin" type="text" placeholder="WP0..." />
+        </div>
+        <div class="form-group span2">
+          <label class="form-label">Build / Service Type</label>
+          <select class="form-select" id="veh-type" oninput="updateSummary()">
+            <option value="">Select type...</option>
+            <option>Vehicle Purchase</option>
+            <option>Custom Build</option>
+            <option>Track Prep</option>
+            <option>Service / Maintenance</option>
+            <option>Tuning</option>
+            <option>Restoration</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mileage</label>
+          <input class="form-input" id="veh-mileage" type="text" placeholder="12,500 mi" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quote Date</label>
+          <input class="form-input" id="quote-date" type="date" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div class="section-block">
+      <div class="section-eyebrow">Line Items</div>
+      <div class="line-items-header">
+        <span>Category</span>
+        <span>Description</span>
+        <span>Qty</span>
+        <span style="text-align:right">Unit Price</span>
+        <span style="text-align:right">Total</span>
+        <span></span>
+      </div>
+      <div id="line-items-container"></div>
+      <div class="add-line-row">
+        <button class="btn-add-line" onclick="addLine('Parts')">+ Part</button>
+        <button class="btn-add-line" onclick="addLine('Labor')">+ Labor</button>
+        <button class="btn-add-line" onclick="addLine('Vehicle')">+ Vehicle</button>
+        <button class="btn-add-line" onclick="addLine('Custom Build')">+ Custom Build</button>
+        <button class="btn-add-line" onclick="addLine('Other')">+ Other</button>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="section-block">
+      <div class="section-eyebrow">Notes / Terms</div>
+      <div class="form-group">
+        <textarea class="form-textarea" id="quote-notes" rows="4"
+          placeholder="Quote valid for 30 days. Labor rate $185/hr. Parts subject to availability..."
+          oninput="updateSummary()"></textarea>
+      </div>
+    </div>
+
+    <!-- Saved Quotes -->
+    <div class="saved-block">
+      <div class="section-eyebrow">Saved Quotes</div>
+      <div class="saved-list" id="saved-list"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Summary -->
+  <div class="summary">
+    <div class="summary-header">
+      <div class="summary-title">Quote Summary</div>
+      <div class="summary-subtitle" id="summary-quote-id">QT-000001</div>
+    </div>
+
+    <div class="summary-client">
+      <div class="summary-client-name" id="sum-client-name">—</div>
+      <div class="summary-client-detail" id="sum-client-detail">Client</div>
+    </div>
+
+    <div class="summary-vehicle">
+      <div class="summary-vehicle-label">Vehicle</div>
+      <div class="summary-vehicle-text" id="sum-vehicle">—</div>
+    </div>
+
+    <div class="summary-lines" id="summary-lines">
+      <div class="empty-lines">No line items yet</div>
+    </div>
+
+    <div class="summary-totals">
+      <div class="totals-row">
+        <span class="totals-label">Parts</span>
+        <span class="totals-value" id="tot-parts">$0.00</span>
+      </div>
+      <div class="totals-row">
+        <span class="totals-label">Labor</span>
+        <span class="totals-value" id="tot-labor">$0.00</span>
+      </div>
+      <div class="totals-row">
+        <span class="totals-label">Vehicle / Other</span>
+        <span class="totals-value" id="tot-other">$0.00</span>
+      </div>
+      <div class="totals-divider"></div>
+      <div class="totals-row">
+        <span class="totals-label">Subtotal</span>
+        <span class="totals-value" id="tot-subtotal">$0.00</span>
+      </div>
+      <div class="discount-row">
+        <span class="totals-label">Discount ($)</span>
+        <input class="discount-input" id="discount-val" type="number" min="0" value="0" oninput="updateSummary()" />
+      </div>
+      <div class="tax-row">
+        <span class="tax-label">Tax</span>
+        <div class="tax-input-wrap">
+          <input class="tax-input" id="tax-rate" type="number" min="0" max="30" step="0.1" value="0" oninput="updateSummary()" />
+          <span class="tax-pct">%</span>
+        </div>
+      </div>
+      <div class="totals-divider"></div>
+      <div class="totals-grand">
+        <span class="totals-grand-label">Total</span>
+        <span class="totals-grand-value" id="tot-grand">$0.00</span>
+      </div>
+    </div>
+
+    <div class="summary-notes" id="summary-notes-block" style="display:none">
+      <div class="section-eyebrow" style="margin-bottom:10px;">Notes</div>
+      <div class="notes-text" id="sum-notes"></div>
+    </div>
+
+    <div class="summary-actions">
+      <button class="btn-action btn-action-primary" onclick="saveQuote()">Save Quote</button>
+      <button class="btn-action btn-action-ghost" onclick="newQuote()">New Quote</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── State ──
+  let lines = [];
+  let currentQuoteId = null;
+  let lineIdCounter = 0;
+
+  const CATS = ['Parts','Labor','Vehicle','Custom Build','Other'];
+
+  // ── ID gen ──
+  function genId() {
+    const saved = JSON.parse(localStorage.getItem('lm_quotes') || '[]');
+    const max = saved.reduce((m, q) => Math.max(m, q.num || 0), 0);
+    return max + 1;
+  }
+
+  function fmtId(n) { return 'QT-' + String(n).padStart(6, '0'); }
+
+  // ── Init ──
+  function init() {
+    const now = new Date();
+    document.getElementById('quote-date').value =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    currentQuoteId = genId();
+    document.getElementById('quote-id-display').textContent = fmtId(currentQuoteId);
+    document.getElementById('summary-quote-id').textContent = fmtId(currentQuoteId);
+    renderSaved();
+    updateSummary();
+  }
+
+  function pad(n) { return String(n).padStart(2,'0'); }
+
+  // ── Lines ──
+  function addLine(cat) {
+    const id = ++lineIdCounter;
+    lines.push({ id, cat, desc: '', qty: 1, unit: 0 });
+    renderLines();
+    updateSummary();
+  }
+
+  function removeLine(id) {
+    lines = lines.filter(l => l.id !== id);
+    renderLines();
+    updateSummary();
+  }
+
+  function renderLines() {
+    const c = document.getElementById('line-items-container');
+    c.innerHTML = '';
+    lines.forEach(l => {
+      const row = document.createElement('div');
+      row.className = 'line-item';
+      row.innerHTML = `
+        <select class="line-select" onchange="updateLine(${l.id},'cat',this.value)">
+          ${CATS.map(cat => `<option ${cat===l.cat?'selected':''}>${cat}</option>`).join('')}
+        </select>
+        <input class="line-input" type="text" placeholder="Description" value="${esc(l.desc)}"
+          oninput="updateLine(${l.id},'desc',this.value)" />
+        <input class="line-input right" type="number" min="0" step="0.5" value="${l.qty}"
+          oninput="updateLine(${l.id},'qty',this.value)" />
+        <input class="line-input right" type="number" min="0" step="0.01" value="${l.unit||''}"
+          placeholder="0.00" oninput="updateLine(${l.id},'unit',this.value)" />
+        <div class="line-total" id="lt-${l.id}">${fmt(l.qty * l.unit)}</div>
+        <button class="btn-delete-line" onclick="removeLine(${l.id})">✕</button>
+      `;
+      c.appendChild(row);
+    });
+  }
+
+  function updateLine(id, field, val) {
+    const l = lines.find(l => l.id === id);
+    if (!l) return;
+    if (field === 'qty' || field === 'unit') l[field] = parseFloat(val) || 0;
+    else l[field] = val;
+    const el = document.getElementById(`lt-${id}`);
+    if (el) el.textContent = fmt(l.qty * l.unit);
+    updateSummary();
+  }
+
+  function esc(s) { return (s||'').replace(/"/g,'&quot;'); }
+  function fmt(n) { return '$' + (parseFloat(n)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+
+  // ── Summary ──
+  function updateSummary() {
+    const clientName = document.getElementById('client-name').value.trim();
+    const year = document.getElementById('veh-year').value.trim();
+    const make = document.getElementById('veh-make').value.trim();
+    const model = document.getElementById('veh-model').value.trim();
+    const type = document.getElementById('veh-type').value;
+    const notes = document.getElementById('quote-notes').value.trim();
+
+    document.getElementById('sum-client-name').textContent = clientName || '—';
+    document.getElementById('sum-client-detail').textContent = type || 'Client';
+    const veh = [year, make, model].filter(Boolean).join(' ') || '—';
+    document.getElementById('sum-vehicle').textContent = veh;
+
+    // Totals by category
+    let parts = 0, labor = 0, other = 0;
+    lines.forEach(l => {
+      const t = l.qty * l.unit;
+      if (l.cat === 'Parts') parts += t;
+      else if (l.cat === 'Labor') labor += t;
+      else other += t;
+    });
+
+    const discount = parseFloat(document.getElementById('discount-val').value) || 0;
+    const taxRate = parseFloat(document.getElementById('tax-rate').value) || 0;
+    const subtotal = parts + labor + other;
+    const afterDiscount = Math.max(0, subtotal - discount);
+    const tax = afterDiscount * taxRate / 100;
+    const grand = afterDiscount + tax;
+
+    document.getElementById('tot-parts').textContent = fmt(parts);
+    document.getElementById('tot-labor').textContent = fmt(labor);
+    document.getElementById('tot-other').textContent = fmt(other);
+    document.getElementById('tot-subtotal').textContent = fmt(subtotal);
+    document.getElementById('tot-grand').textContent = fmt(grand);
+
+    // Line breakdown in summary
+    const linesEl = document.getElementById('summary-lines');
+    if (lines.length === 0) {
+      linesEl.innerHTML = '<div class="empty-lines">No line items yet</div>';
+    } else {
+      const groups = {};
+      CATS.forEach(c => groups[c] = []);
+      lines.forEach(l => { if (groups[l.cat]) groups[l.cat].push(l); });
+      let html = '';
+      CATS.forEach(cat => {
+        if (!groups[cat].length) return;
+        html += `<div class="summary-section-label">${cat}</div>`;
+        groups[cat].forEach(l => {
+          html += `<div class="summary-line">
+            <span class="summary-line-name">${l.desc || '—'}</span>
+            <span class="summary-line-amount">${fmt(l.qty * l.unit)}</span>
+          </div>`;
+        });
+      });
+      linesEl.innerHTML = html;
+    }
+
+    // Notes
+    const notesBlock = document.getElementById('summary-notes-block');
+    if (notes) {
+      notesBlock.style.display = 'block';
+      document.getElementById('sum-notes').textContent = notes;
+    } else {
+      notesBlock.style.display = 'none';
+    }
+  }
+
+  // ── Save / Load ──
+  function saveQuote() {
+    const name = document.getElementById('client-name').value.trim();
+    if (!name) { toast('Enter a client name first'); return; }
+
+    const discount = parseFloat(document.getElementById('discount-val').value) || 0;
+    const taxRate  = parseFloat(document.getElementById('tax-rate').value) || 0;
+    const subtotal = lines.reduce((s,l) => s + l.qty*l.unit, 0);
+    const grand = Math.max(0, subtotal - discount) * (1 + taxRate/100);
+
+    const q = {
+      num: currentQuoteId,
+      id: fmtId(currentQuoteId),
+      clientName: name,
+      clientPhone: document.getElementById('client-phone').value,
+      clientEmail: document.getElementById('client-email').value,
+      vehYear: document.getElementById('veh-year').value,
+      vehMake: document.getElementById('veh-make').value,
+      vehModel: document.getElementById('veh-model').value,
+      vehVin: document.getElementById('veh-vin').value,
+      vehMileage: document.getElementById('veh-mileage').value,
+      vehType: document.getElementById('veh-type').value,
+      quoteDate: document.getElementById('quote-date').value,
+      lines: JSON.parse(JSON.stringify(lines)),
+      notes: document.getElementById('quote-notes').value,
+      discount, taxRate, grand,
+      savedAt: Date.now()
+    };
+
+    const saved = JSON.parse(localStorage.getItem('lm_quotes') || '[]');
+    const idx = saved.findIndex(s => s.num === currentQuoteId);
+    if (idx >= 0) saved[idx] = q; else saved.unshift(q);
+    localStorage.setItem('lm_quotes', JSON.stringify(saved));
+    renderSaved();
+    toast('Quote saved');
+  }
+
+  function loadQuote(num) {
+    const saved = JSON.parse(localStorage.getItem('lm_quotes') || '[]');
+    const q = saved.find(s => s.num === num);
+    if (!q) return;
+
+    currentQuoteId = q.num;
+    lineIdCounter = q.lines.reduce((m,l) => Math.max(m, l.id||0), 0);
+
+    document.getElementById('client-name').value  = q.clientName || '';
+    document.getElementById('client-phone').value = q.clientPhone || '';
+    document.getElementById('client-email').value = q.clientEmail || '';
+    document.getElementById('veh-year').value     = q.vehYear || '';
+    document.getElementById('veh-make').value     = q.vehMake || '';
+    document.getElementById('veh-model').value    = q.vehModel || '';
+    document.getElementById('veh-vin').value      = q.vehVin || '';
+    document.getElementById('veh-mileage').value  = q.vehMileage || '';
+    document.getElementById('veh-type').value     = q.vehType || '';
+    document.getElementById('quote-date').value   = q.quoteDate || '';
+    document.getElementById('quote-notes').value  = q.notes || '';
+    document.getElementById('discount-val').value = q.discount || 0;
+    document.getElementById('tax-rate').value     = q.taxRate || 0;
+
+    lines = q.lines || [];
+    document.getElementById('quote-id-display').textContent   = q.id;
+    document.getElementById('summary-quote-id').textContent   = q.id;
+
+    renderLines();
+    updateSummary();
+    toast(`Loaded ${q.id}`);
+  }
+
+  function deleteQuote(num, e) {
+    e.stopPropagation();
+    let saved = JSON.parse(localStorage.getItem('lm_quotes') || '[]');
+    saved = saved.filter(s => s.num !== num);
+    localStorage.setItem('lm_quotes', JSON.stringify(saved));
+    renderSaved();
+    toast('Quote deleted');
+  }
+
+  function newQuote() {
+    lines = [];
+    lineIdCounter = 0;
+    ['client-name','client-phone','client-email','veh-year','veh-make','veh-model',
+     'veh-vin','veh-mileage','quote-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('veh-type').value = '';
+    document.getElementById('discount-val').value = 0;
+    document.getElementById('tax-rate').value = 0;
+    const now = new Date();
+    document.getElementById('quote-date').value =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    currentQuoteId = genId();
+    document.getElementById('quote-id-display').textContent = fmtId(currentQuoteId);
+    document.getElementById('summary-quote-id').textContent = fmtId(currentQuoteId);
+    renderLines();
+    updateSummary();
+    toast('New quote started');
+  }
+
+  function renderSaved() {
+    const saved = JSON.parse(localStorage.getItem('lm_quotes') || '[]');
+    const el = document.getElementById('saved-list');
+    if (saved.length === 0) {
+      el.innerHTML = '<div class="saved-empty">No saved quotes</div>'; return;
+    }
+    el.innerHTML = saved.slice(0,10).map(q => `
+      <div class="saved-item" onclick="loadQuote(${q.num})">
+        <div>
+          <div class="saved-item-name">${q.clientName}</div>
+          <div class="saved-item-meta">${q.id} &mdash; ${[q.vehYear,q.vehMake,q.vehModel].filter(Boolean).join(' ')||'No vehicle'}</div>
+        </div>
+        <div class="saved-item-total">${fmt(q.grand)}</div>
+        <button class="saved-item-del" onclick="deleteQuote(${q.num},event)">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // ── Toast ──
+  let toastTO;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    clearTimeout(toastTO);
+    toastTO = setTimeout(() => el.classList.remove('show'), 2400);
+  }
+
+  init();
+  
+</script>
+</body>
+</html>
